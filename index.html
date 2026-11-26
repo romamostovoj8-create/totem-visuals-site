@@ -418,7 +418,7 @@ h1{font-size:clamp(2.35rem,6.2vw,4.5rem);font-weight:800;letter-spacing:-.035em;
       <span class="chip"><b>1.21.11</b> <span data-i18n="meta.mc">Minecraft</span></span>
       <span class="chip"><b>Fabric</b> <span data-i18n="meta.loader">Loader 0.20.1+</span></span>
       <span class="chip"><b>Java 21+</b></span>
-      <span class="chip"><b>1.0 МБ</b> <span data-i18n="meta.size">размер .jar</span></span>
+      <span class="chip"><b data-jar-size>1,1 МБ</b> <span data-i18n="meta.size">размер .jar</span></span>
       <span class="chip"><b>MIT</b> <span data-i18n="meta.license">лицензия</span></span>
     </div>
 
@@ -1042,7 +1042,26 @@ h1{font-size:clamp(2.35rem,6.2vw,4.5rem);font-weight:800;letter-spacing:-.035em;
       b.classList.toggle("is-on", b.getAttribute("data-lang-btn") === lang);
     });
     try{ localStorage.setItem("ctv-lang", lang); }catch(e){}
+    renderJarSize();
   }
+
+  /* Live size of the .jar served next to the page — never goes stale after a rebuild. */
+  var JAR_BYTES = 0;
+  function renderJarSize(){
+    var el = document.querySelector("[data-jar-size]");
+    if(!el || !JAR_BYTES) return;
+    var mb = (JAR_BYTES / 1048576).toFixed(1).replace(".", ",");
+    el.textContent = mb + " " + (current === "ru" ? "МБ" : "MB");
+  }
+  (function probeJar(){
+    if(!window.fetch) return;
+    fetch("download/customtotemvisuals-1.0.0.jar", { method: "HEAD" })
+      .then(function(r){
+        var len = r.headers.get("content-length");
+        if(r.ok && len){ JAR_BYTES = parseInt(len, 10) || 0; renderJarSize(); }
+      })
+      .catch(function(){});
+  })();
   document.querySelectorAll("[data-lang-btn]").forEach(function(b){
     b.addEventListener("click", function(){
       applyLang(b.getAttribute("data-lang-btn"));
